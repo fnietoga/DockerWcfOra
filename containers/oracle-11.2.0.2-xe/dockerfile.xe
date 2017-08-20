@@ -1,0 +1,79 @@
+# Pull base image
+# ---------------
+FROM fnietoga/oraclelinux:7-slim
+
+# Maintainer
+# ----------
+MAINTAINER Francisco Nieto <fnietoga@gmail.com>
+
+# Install software dependencies 
+# -----------------------------
+#RUN yum -y install unzip libaio bc initscripts net-tools openssl && \	
+#    yum clean all  
+
+
+# Environment variables required for this build (do NOT change)
+# -------------------------------------------------------------
+ENV ORACLE_BASE=/u01/app/oracle \
+    ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe \
+    ORACLE_SID=XE \
+    INSTALL_FILE_1="oracle-xe-11.2.0-1.0.x86_64.rpm.zip" \
+    INSTALL_DIR="$HOME/orainstall" \    
+    RUN_FILE="runOracle.sh" \
+    SCRIPTS_FOLDER="/scripts"
+	
+# Use second ENV so that variable get substituted
+# -----------------------------------------------
+ENV PATH=$ORACLE_HOME/bin:$PATH 
+
+# Create fake 'free' command to spoof swap space
+# ----------------------------------------------
+ADD assets/fake-swap.sh /tmp/fake-free.sh
+RUN mv /usr/bin/free /usr/bin/free.orig && \
+    chmod 755 /tmp/fake-free.sh && \ 
+    sync && \
+    /tmp/fake-free.sh
+
+# Copy binaries
+# -------------
+COPY install/$INSTALL_FILE_1 install/$RUN_FILE $INSTALL_DIR/
+COPY $SCRIPTS_FOLDER $INSTALL_DIR/$SCRIPTS_FOLDER
+
+# Install Oracle Express Edition
+# ------------------------------
+RUN cd $INSTALL_DIR && \
+    unzip $INSTALL_FILE_1 && \
+    rm $INSTALL_FILE_1 &&    \
+    rpm -i Disk1/*.rpm &&    \
+#    mkdir -p $ORACLE_BASE/scripts/setup && \
+#    mkdir $ORACLE_BASE/scripts/startup && \
+    mv $INSTALL_DIR/scripts $ORACLE_BASE && \
+#    ln -s $ORACLE_BASE/scripts /docker-entrypoint-initdb.d && \
+    mkdir $ORACLE_BASE/oradata && \
+    chown -R oracle:dba $ORACLE_BASE && \
+    mv $INSTALL_DIR/$RUN_FILE $ORACLE_BASE/ && \
+    cd $HOME && \
+    rm -rf $INSTALL_DIR && \
+    chmod ug+x $ORACLE_BASE/*.sh
+	
+# Restore 'free' command
+# ----------------------
+RUN mv /usr/bin/free.orig /usr/bin/free && \
+    rm /tmp/fake-free.sh
+
+# Configure instance
+# -------------------
+ADD config/xe.rsp config/init.ora config/initXETemp.ora	$ORACLE_HOME/config/scripts/
+RUN chown -R oracle:dba $ORACLE_HOME/config/scripts/*.ora \
+                     $ORACLE_HOME/config/scripts/xe.rsp
+RUN chmod 755        $ORACLE_HOME/config/scripts/*.ora \
+                     $ORACLE_HOME/config/scripts/xe.rsp 	 
+RUN /etc/init.d/oracle-xe configure responseFile=$ORACLE_HOME/config/scripts/xe.rsp	
+RUN rm $ORACLE_HOME/config/scripts/xe.rsp	
+
+
+VOLUME ["$ORACLE_BASE/oradata"]
+EXPOSE 1521 8080
+
+CMD exec $ORACLE_BASE/$RUN_FILE
+#CMD ["/bin/bash"]

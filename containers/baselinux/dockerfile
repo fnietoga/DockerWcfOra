@@ -1,0 +1,17 @@
+# Pull base image
+# ---------------
+FROM oraclelinux:7-slim
+
+# Maintainer
+# ----------
+MAINTAINER Francisco Nieto <fnietoga@gmail.com>
+
+# Install software dependencies 
+# -----------------------------
+RUN yum -y install unzip libaio bc initscripts net-tools openssl && \	
+    yum clean all  
+	
+# Basic Run 
+# -----------------------------
+CMD ["/bin/bash"]
+
