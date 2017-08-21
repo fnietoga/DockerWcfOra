@@ -12,3 +12,5 @@ sudo docker logs --details linux
 sudo docker container stop oracle
 sudo docker container rm oracle
 
+##Attach to a image fault in build
+docker run --rm -it 87b3a94b9960 /bin/bash

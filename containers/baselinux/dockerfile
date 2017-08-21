@@ -8,7 +8,8 @@ MAINTAINER Francisco Nieto <fnietoga@gmail.com>
 
 # Install software dependencies 
 # -----------------------------
-RUN yum -y install unzip libaio bc initscripts net-tools openssl && \	
+RUN echo 'http_caching=none' >> /etc/yum.conf && \
+	yum -y install unzip libaio bc initscripts net-tools openssl && \	
     yum clean all  
 	
 # Basic Run 
