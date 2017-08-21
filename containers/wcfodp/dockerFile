@@ -1,0 +1,36 @@
+FROM microsoft/wcf
+
+    #Install Chocolatey
+    #RUN @powershell -NoProfile -ExecutionPolicy unrestricted -Command "$env:chocolateyUseWindowsCompression = 'false'; (iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))) >$null 2>&1" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin
+
+	#Copy software to be installed and unzip
+    COPY .\install c:\install
+	RUN powershell -NoProfile -Command \
+		Expand-Archive c:\install\oracle_odac_12_x64.zip -DestinationPath c:\install\oracle_odac_12_x64
+	
+    # this is where the Oracle ODAC Xcopy version has been unzipped into
+    #WORKDIR c:/install/oracle_odac_12_x64
+
+    #installs Microsoft Visual C++ 2010 Redistributable Package, ODP.NET 4 64bit, Set path to include oracle home
+	RUN powershell -NoProfile -ExecutionPolicy unrestricted -Command \
+		CD c:\install \
+		.\vcredist_x64.exe /q /norestart
+		CD c:\install\oracle_odac_12_x64 \
+		.\install.bat odp.net4 c:\oracle myhome true \ 
+		setx /m PATH "%PATH%;C:\oracle"
+
+	#copy web site folder	
+	COPY .\websites\WcfExecPL 'C:\Program Files (x86)\Services Platform WcfExecPL'
+	
+    # remove default web site, add my 64 bit web application and use the 64-bit app pool
+    RUN powershell -NoProfile -Command \
+		Remove-WebSite -Name 'Default Web Site'; \ 
+		Remove-Item -Recurse C:\inetpub\wwwroot\* \ 
+		New-WebAppPool -Name 'ServicesPlatformAppPool'
+        New-Website -Name 'VF Services Platform' -Port 100 -PhysicalPath 'C:\Program Files (x86)\VF Services Platform' -ApplicationPool 'ServicesPlatformAppPool' \
+		New-WebApplication -Site 'VF Services Platform' -Name 'WcfExecPL' -PhysicalPath 'C:\Program Files (x86)\Services Platform WcfExecPL' -ApplicationPool 'ServicesPlatformAppPool'
+	
+	# This instruction tells the container to listen on port 100. 
+	EXPOSE 100
+	
+    #ENTRYPOINT powershell
