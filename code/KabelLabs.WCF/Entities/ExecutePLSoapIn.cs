@@ -9,7 +9,7 @@ namespace KabelLabs.WCF.Entities
     public class ExecutePLSoapIn
     {
         [MessageBodyMemberAttribute(Namespace = "http://KabelLabs/Doker/1.0", Order = 0)]
-        public ExecutePLRequest ExecutePLRequest;
+        public Libraries.Entities.ExecutePLRequest ExecutePLRequest;
 
     }
 }

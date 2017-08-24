@@ -9,6 +9,6 @@ namespace KabelLabs.WCF.Entities
     public class ExecutePLSoapOut
     {
         [MessageBodyMemberAttribute(Namespace = "http://KabelLabs/Doker/1.0", Order = 0)]
-        public ExecutePLResponse ExecutePLResponse;
+        public Libraries.Entities.ExecutePLResponse ExecutePLResponse;
     }
 }

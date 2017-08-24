@@ -10,11 +10,11 @@ namespace KabelLabs.WCF
 {
      public class DockerIISService : IDockerIISService
     {
-        private Gateways.OracleGateway _gateway;
+        private Libraries.Gateways.OracleGateway _gateway;
 
-        public DockerIISService() : this(new Gateways.OracleGateway()) { }         
+        public DockerIISService() : this(new Libraries.Gateways.OracleGateway()) { }         
      
-         public DockerIISService(Gateways.OracleGateway gateway) {
+         public DockerIISService(Libraries.Gateways.OracleGateway gateway) {
             this._gateway = gateway;
         }
 
@@ -35,7 +35,7 @@ namespace KabelLabs.WCF
                 throw new ArgumentException("Debe especificar al menos un valor de filtrado");
             }
 
-            response.ExecutePLResponse = new Entities.ExecutePLResponse();
+            response.ExecutePLResponse = new Libraries.Entities.ExecutePLResponse();
             response.ExecutePLResponse.Employees = _gateway.LISTEMPLOYEES(
                 request.ExecutePLRequest.EMPLOYEE_IDSpecified ? request.ExecutePLRequest.EMPLOYEE_ID : null as int?,
                 request.ExecutePLRequest.COUNTRY_NAME,
